@@ -76,4 +76,12 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+  return res.status(200).json({
+    id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+  });
+};
+
+module.exports = { register, login, getMe };
