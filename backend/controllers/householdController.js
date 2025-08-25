@@ -53,4 +53,31 @@ const joinHousehold = async (req, res) => {
   }
 };
 
-module.exports = { createHousehold, joinHousehold };
+const getHousehold = async (req, res) => {
+  try {
+    const household = await Household.findById(req.params.id)
+      .populate('owner', 'name email')
+      .populate('members', 'name email');
+
+    if (!household) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    const isMember = household.members.some(
+      (member) => member._id.toString() === req.user._id.toString()
+    );
+
+    if (!isMember) {
+      return res.status(403).json({ message: 'You are not a member of this household' });
+    }
+
+    return res.status(200).json(household);
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid household ID' });
+    }
+    return res.status(500).json({ message: 'Server error while fetching household' });
+  }
+};
+
+module.exports = { createHousehold, joinHousehold, getHousehold };
