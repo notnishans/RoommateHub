@@ -25,4 +25,32 @@ const createHousehold = async (req, res) => {
   }
 };
 
-module.exports = { createHousehold };
+const joinHousehold = async (req, res) => {
+  try {
+    const household = await Household.findById(req.params.id);
+
+    if (!household) {
+      return res.status(404).json({ message: 'Household not found' });
+    }
+
+    const alreadyMember = household.members.some(
+      (memberId) => memberId.toString() === req.user._id.toString()
+    );
+
+    if (alreadyMember) {
+      return res.status(400).json({ message: 'You are already a member of this household' });
+    }
+
+    household.members.push(req.user._id);
+    await household.save();
+
+    return res.status(200).json(household);
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid household ID' });
+    }
+    return res.status(500).json({ message: 'Server error while joining household' });
+  }
+};
+
+module.exports = { createHousehold, joinHousehold };
